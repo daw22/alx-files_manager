@@ -5,4 +5,6 @@ const app = express();
 
 app.use('/', routes);
 
-app.listen(process.env.PORT || 5000);
+app.listen(process.env.PORT || 5000,
+  () => console.log('Server running on port 5000')
+);
