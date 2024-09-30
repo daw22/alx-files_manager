@@ -6,7 +6,7 @@ import redisClient from '../utils/redis';
 async function postNew(req, res) {
   const { email, password } = req.body;
   if (!email) {
-    return res.send({ error: 'Missing email' }).status(400);
+    return res.json({ error: 'Missing email' }).status(400);
   }
   if (!password) {
     return res.json({ error: 'Missing password' }).status(400);
