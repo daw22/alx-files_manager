@@ -7,11 +7,11 @@ import redisClient from '../utils/redis';
 async function getConnect(req, res) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    return res.json({ error: 'Authorization header missing' }).status(401);
+    return res.status(401).json({ error: 'Authorization header missing' });
   }
   const [authType, encodedCredentials] = authHeader.split(' ');
   if (authType !== 'Basic') {
-    return res.json({ error: 'Authorization type error' }).status(401);
+    return res.status.(401).json({ error: 'Authorization type error' });
   }
   const decodedCredentials = Buffer.from(encodedCredentials, 'base64')
     .toString('utf-8');
@@ -26,22 +26,21 @@ async function getConnect(req, res) {
     const token = uuidv4();
     const key = `auth_${token}`;
     await redisClient.set(key, user._id.toString(), 60 * 60 * 24);
-    res.json({ token }).status(200);
-  } else {
-    return res.json({ error: 'Unauthorized' }).status(401);
+    return res.status.(200).json({ token });
   }
+  return res.json({ error: 'Unauthorized' }).status(401);
 }
 
 async function getDisconnect(req, res) {
   const token = req.headers['x-token'];
   const userId = await redisClient.get(`auth_${token}`);
   if (!userId) {
-    return res.json({ error: 'Unauthorized' }).status(401);
+    return res.status(401).json({ error: 'Unauthorized' });
   }
   const userColl = dbClient.client.db().collection('users');
   const user = await userColl.findOne({ _id: new ObjectId(userId) });
   if (!user) {
-    return res.json({ error: 'Unauthorized' }).status(401);
+    return res.status(401).json({ error: 'Unauthorized' });
   }
   await redisClient.del(`auth_${token}`);
   return res.status(204).send();
