@@ -11,7 +11,7 @@ async function getConnect(req, res) {
   }
   const [authType, encodedCredentials] = authHeader.split(' ');
   if (authType !== 'Basic') {
-    return res.status.(401).json({ error: 'Authorization type error' });
+    return res.status(401).json({ error: 'Authorization type error' });
   }
   const decodedCredentials = Buffer.from(encodedCredentials, 'base64')
     .toString('utf-8');
