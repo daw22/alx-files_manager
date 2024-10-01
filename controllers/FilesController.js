@@ -42,7 +42,9 @@ async function postUpload(req, res) {
   };
   if (type === 'folder') {
     const savedDoc = await filesColl.insertOne(doc);
-    return res.json(savedDoc.ops[0]).status(201);
+    const id = savedDoc.ops[0]._id;
+    delete savedDoc.ops[0]._id;
+    return res.status(201).json({ id, ...savedDoc.ops[0] });
   }
   const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
   const fileName = uuidv4();
@@ -57,7 +59,9 @@ async function postUpload(req, res) {
   const savedDoc = await filesColl.insertOne({ ...doc, localPath: filePath });
   const result = savedDoc.ops[0];
   delete result.localPath;
-  return res.json(result).status(201);
+  const id = result._id;
+  delete result._id;
+  return res.status(201).json({ id, ...result });
 }
 
 async function getShow(req, res) {
@@ -72,7 +76,7 @@ async function getShow(req, res) {
     return res.status(404).json({ error: 'Not found' });
   }
   delete file.localPath;
-  const id  = file._id;
+  const id = file._id;
   delete file._id;
   return res.status(200).json({ id, ...file });
 }
