@@ -14,23 +14,23 @@ async function postUpload(req, res) {
   const filesColl = dbClient.client.db().collection('files');
 
   const userId = await redisClient.get(`auth_${token}`);
-  if (!userId) return res.json({ error: 'Unauthorized' }).status(401);
-  if (!name) return res.json({ error: 'Missing name' }).status(400);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!name) return res.status(400).json({ error: 'Missing name' });
   if (!type || !(allowedTypes.includes(type))) {
-    return res.json({ error: 'Missing type' }).status(400);
+    return res.status(400).json({ error: 'Missing type' });
   }
   if (!data && type !== 'folder') {
-    return res.json({ error: 'Missing data' }).status(400);
+    return res.status(400).json({ error: 'Missing data' });
   }
   if (parentId) {
     const parentFolder = await filesColl.findOne({
       _id: new ObjectId(parentId),
     });
     if (!parentFolder) {
-      return res.json({ error: 'Parent not found' }).status(400);
+      return res.status(400).json({ error: 'Parent not found' });
     }
     if (parentFolder.type !== 'folder') {
-      return res.json({ error: 'Parent is not a folder' }).status(400);
+      return res.status(400).json({ error: 'Parent is not a folder' });
     }
   }
   const doc = {
