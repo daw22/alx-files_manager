@@ -121,7 +121,10 @@ async function putPublish(req, res) {
     { returnOriginal: false },
   );
   delete updatedFile.value.localPath;
-  return res.status(200).json(updatedFile.value);
+  const id = updatedFile.value._id;
+  delete updatedFile.value._id;
+  const returnFile = { id, ...updatedFile.value };
+  return res.status(200).json(returnFile);
 }
 
 async function putUnpublish(req, res) {
@@ -141,7 +144,10 @@ async function putUnpublish(req, res) {
     { returnOriginal: false },
   );
   delete updatedFile.value.localPath;
-  return res.status(200).json(updatedFile.value);
+  const id = updatedFile.value._id;
+  delete updatedFile.value._id;
+  const returnFile = { id, ...updatedFile.value };
+  return res.status(200).json(returnFile);
 }
 
 export default {
