@@ -72,7 +72,9 @@ async function getShow(req, res) {
     return res.status(404).json({ error: 'Not found' });
   }
   delete file.localPath;
-  return res.status(200).json(file);
+  const id  = file._id;
+  delete file._id;
+  return res.status(200).json({ id, ...file });
 }
 
 async function getIndex(req, res) {
