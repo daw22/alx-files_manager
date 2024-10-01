@@ -85,7 +85,7 @@ async function getIndex(req, res) {
   const token = req.headers['x-token'];
   const parentId = req.query.parentId || 0;
   const page = req.query.page || 0;
-  const ITEMS_PER_PAGE = 1;
+  const ITEMS_PER_PAGE = 20;
   const userId = await redisClient.get(`auth_${token}`);
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
   const filter = { parentId };
