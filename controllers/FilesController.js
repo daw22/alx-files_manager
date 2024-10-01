@@ -60,4 +60,48 @@ async function postUpload(req, res) {
   return res.json(result).status(201);
 }
 
-export default { postUpload };
+async function getShow(req, res) {
+  const token = req.headers['x-token'];
+  const fileId = req.params.id;
+  const userId = await redisClient.get(`auth_${token}`);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const filesColl = dbClient.client.db().collection('files');
+  const file = await filesColl.findOne({ _id: new ObjectId(fileId) });
+  if (!file) return res.status(404).json({ error: 'Not found' });
+  if (file.userId !== userId) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  delete file.localPath;
+  return res.status(200).json(file);
+}
+
+async function getIndex(req, res) {
+  const token = req.headers['x-token'];
+  const parentId = req.query.parentId || 0;
+  const page = req.query.page || 0;
+  const ITEMS_PER_PAGE = 1;
+  const userId = await redisClient.get(`auth_${token}`);
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  const filter = { parentId };
+  const filesColl = dbClient.client.db().collection('files');
+  const files = await filesColl.aggregate([
+    { $match: filter },
+    { $sort: { _id: -1 } },
+    { $skip: page * ITEMS_PER_PAGE },
+    { $limit: ITEMS_PER_PAGE },
+    {
+      $project: {
+        _id: 0,
+        id: '$_id',
+        userId: '$userId',
+        name: '$name',
+        type: '$type',
+        isPublic: '$isPublic',
+        parentId: '$parentId',
+      },
+    },
+  ]).toArray();
+  return res.status(200).json(files);
+}
+
+export default { postUpload, getShow, getIndex };
