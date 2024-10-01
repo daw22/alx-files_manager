@@ -19,16 +19,16 @@ async function getConnect(req, res) {
   const userColl = dbClient.client.db().collection('users');
   const user = await userColl.findOne({ email });
   if (!user) {
-    return res.json({ error: 'Unauthorized' }).status(401);
+    return res.status(401).json({ error: 'Unauthorized' });
   }
   const encodedPassword = sha1(password);
   if (encodedPassword === user.password) {
     const token = uuidv4();
     const key = `auth_${token}`;
     await redisClient.set(key, user._id.toString(), 60 * 60 * 24);
-    return res.status.(200).json({ token });
+    return res.status(200).json({ token });
   }
-  return res.json({ error: 'Unauthorized' }).status(401);
+  return res.status(401).json({ error: 'Unauthorized' });
 }
 
 async function getDisconnect(req, res) {
