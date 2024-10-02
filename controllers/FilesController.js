@@ -3,8 +3,11 @@ import path from 'path';
 import mime from 'mime-types';
 import { ObjectId } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
+import Queue from 'bull/lib/queue';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
+
+const fileQueue = new Queue('thumbnail maker');
 
 async function postUpload(req, res) {
   const token = req.headers['x-token'];
@@ -50,7 +53,7 @@ async function postUpload(req, res) {
   const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
   const fileName = uuidv4();
   const filePath = path.resolve(folderPath, fileName);
-  const fileContent = Buffer.from(data, 'base64').toString('utf-8');
+  const fileContent = Buffer.from(data, 'base64');
   fs.mkdir(folderPath, { recursive: true }, (err) => (
     err ? res.json({ error: 'unable to save file' }) : {}
   ));
@@ -62,6 +65,10 @@ async function postUpload(req, res) {
   delete result.localPath;
   const id = result._id;
   delete result._id;
+  if (type === 'image') {
+    const name = `thumbnail_maker_${id}`;
+    fileQueue.add({ userId, fileId: id, name });
+  }
   return res.status(201).json({ id, ...result });
 }
 
@@ -160,6 +167,7 @@ async function putUnpublish(req, res) {
 async function getFile(req, res) {
   const token = req.headers['x-token'];
   const userId = await redisClient.get(`auth_${token}`);
+  const { size } = req.query;
   const fileId = req.params.id;
   const filesColl = dbClient.client.db().collection('files');
   const file = await filesColl.findOne({ _id: new ObjectId(fileId) });
@@ -171,7 +179,11 @@ async function getFile(req, res) {
     return res.status(400).json({ error: 'A folder doesn\'t have content' });
   }
   try {
-    const fileData = fs.readFileSync(file.localPath);
+    let filePath = file.localPath;
+    if (size) {
+      filePath = `${file.localPath}_${size}`;
+    }
+    const fileData = fs.readFileSync(filePath);
     const mimeType = mime.contentType(file.name);
     res.setHeader('Content-Type', mimeType);
     return res.status(200).send(fileData);
