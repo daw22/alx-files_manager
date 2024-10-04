@@ -8,6 +8,7 @@ import dbClient from './utils/db';
 const writeFileAsync = promisify(writeFile);
 
 const fileQueue = new Queue('thumbnail maker');
+const userQueue = new Queue('email-sender');
 
 const generateThumbnail = async (filePath, size) => {
   console.log(filePath, size);
@@ -40,4 +41,18 @@ fileQueue.process(async (job, done) => {
     .then(() => {
       done();
     });
+});
+
+userQueue.process(async (job, done) => {
+  const { userId } = job.data;
+  if (!userId) {
+    throw new Error('Missing userId');
+  }
+  const usersColl = dbClient.client.db().collection('users');
+  const user = await usersColl.findOne({ _id: new ObjectId(userId) });
+  if (!user) {
+    throw new Error('User not found');
+  }
+  console.log(`Welcome ${user.email}!`);
+  done();
 });

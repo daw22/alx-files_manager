@@ -1,7 +1,10 @@
 import sha1 from 'sha1';
 import { ObjectId } from 'mongodb';
+import Queue from 'bull/lib/queue';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+
+const userQueue = new Queue('email-sender');
 
 async function postNew(req, res) {
   const { email, password } = req.body;
@@ -22,6 +25,7 @@ async function postNew(req, res) {
     email,
     password: hashedPassword,
   });
+  userQueue.add({ name: 'welcome-email', userId: newUser.insertedId });
   return res.status(201).json({ id: newUser.insertedId, email });
 }
 
